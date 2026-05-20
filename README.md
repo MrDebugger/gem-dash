@@ -11,7 +11,7 @@
 
 ## 🎮 Play
 
-**[▶ Play in your browser](https://yourusername.github.io/gem-dash/)** ← *(update after enabling Pages)*
+**[▶ Play in your browser](https://mrdebugger.github.io/gem-dash/)**
 
 Or just open `index.html` locally — no server, no build step, no dependencies.
 
