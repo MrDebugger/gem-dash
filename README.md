@@ -103,7 +103,7 @@ Everything lives in `index.html`. No bundler, no framework, no npm.
 ## 🛠️ Local Development
 
 ```bash
-git clone https://github.com/yourusername/gem-dash.git
+git clone https://github.com/mrdebugger/gem-dash.git
 cd gem-dash
 # Open in browser — any of:
 open index.html                  # macOS
@@ -119,7 +119,7 @@ python3 -m http.server 8080      # or serve with a local server
 1. Push this repo to GitHub
 2. Go to **Settings → Pages**
 3. Source: **Deploy from a branch** → `main` / `(root)`
-4. Your game is live at `https://yourusername.github.io/gem-dash/`
+4. Your game is live at `https://mrdebugger.github.io/gem-dash/`
 
 ---
 
