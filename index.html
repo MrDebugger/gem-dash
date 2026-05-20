@@ -88,6 +88,7 @@ const SFX = {
   rock:    () => { beep({ freq:120, type:'sawtooth', vol:0.35, dur:0.25 }); beep({ freq:80, type:'square', vol:0.2, dur:0.35 }); },
   over:    () => { beep({ freq:220, freq2:60, type:'sawtooth', vol:0.3, dur:0.6, slide:true }); },
   powerup: () => { [300,500,700,900].forEach((f,i)=>{ const g=AC.createGain(),o=AC.createOscillator(); o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0.15,AC.currentTime+i*0.07); g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+i*0.07+0.1); o.connect(g);g.connect(AC.destination);o.start(AC.currentTime+i*0.07);o.stop(AC.currentTime+i*0.07+0.1); }); },
+  victory: () => { [400,500,600,800,1000,1200].forEach((f,i)=>{ const g=AC.createGain(),o=AC.createOscillator(); o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0.18,AC.currentTime+i*0.1); g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+i*0.1+0.18); o.connect(g);g.connect(AC.destination);o.start(AC.currentTime+i*0.1);o.stop(AC.currentTime+i*0.1+0.18); }); },
   combo:   () => beep({ freq:880, type:'sine', vol:0.12, dur:0.08 }),
 };
 
@@ -122,6 +123,7 @@ let score=0, bestScore=+(localStorage.getItem('gemDashBest')||0);
 let timer=60, lastTime=0;
 let hitStop=0, shakeTime=0, shakeAmt=0;
 let pausedFrom=null;
+let survived=false; // true = timer ran out, false = hit a rock
 
 // PLAYER
 const PLAYER_W=52, PLAYER_H=44;
@@ -631,60 +633,104 @@ function drawStartScreen() {
 }
 
 function drawGameOverScreen() {
-  // dark overlay
   ctx.fillStyle = '#0a001099';
   ctx.fillRect(0,0,W,H);
 
   glowPhase += 0.04;
   const pulse = 0.7+0.3*Math.sin(glowPhase);
 
-  // panel
-  ctx.fillStyle = '#12002288';
-  roundRect(ctx, W/2-250, H/2-180, 500, 360, 18);
+  const panelColor  = survived ? '#001a00bb' : '#12002288';
+  const borderColor = survived ? '#00ff88'   : PAL.neon;
+  ctx.fillStyle = panelColor;
+  roundRect(ctx, W/2-270, H/2-190, 540, 380, 18);
   ctx.fill();
-  ctx.strokeStyle = PAL.neon;
+  ctx.strokeStyle = borderColor;
   ctx.lineWidth = 2;
-  ctx.shadowColor = PAL.neon;
+  ctx.shadowColor = borderColor;
   ctx.shadowBlur = 20*pulse;
-  roundRect(ctx, W/2-250, H/2-180, 500, 360, 18);
+  roundRect(ctx, W/2-270, H/2-190, 540, 380, 18);
   ctx.stroke();
   ctx.shadowBlur=0;
 
   ctx.textAlign='center';
-  ctx.fillStyle='#ff4444';
-  ctx.shadowColor='#ff4444'; ctx.shadowBlur=24;
-  ctx.font = "36px 'Press Start 2P'";
-  ctx.fillText('GAME OVER', W/2, H/2-100);
-  ctx.shadowBlur=0;
 
-  ctx.fillStyle='#ffffff';
-  ctx.font="14px 'Press Start 2P'";
-  ctx.fillText('FINAL SCORE', W/2, H/2-44);
+  if (survived) {
+    // ── VICTORY ──
+    // confetti-style particles burst on every frame
+    if (Math.random()<0.4) {
+      const cols=['#00ff88','#ffe000','#00ffee','#ff00aa','#ffffff'];
+      particles.push({
+        x: rand(W/2-220, W/2+220),
+        y: H/2-160,
+        vx: rand(-60,60), vy: rand(-120,-20),
+        r: rand(3,6), life:1, decay: rand(1.2,2),
+        color: cols[Math.floor(Math.random()*cols.length)],
+      });
+    }
 
-  ctx.fillStyle=PAL.neon2;
-  ctx.shadowColor=PAL.neon2; ctx.shadowBlur=20;
-  ctx.font = "52px 'Press Start 2P'";
-  ctx.fillText(score, W/2, H/2+28);
-  ctx.shadowBlur=0;
+    ctx.fillStyle='#00ff88';
+    ctx.shadowColor='#00ff88'; ctx.shadowBlur=32*pulse;
+    ctx.font = "28px 'Press Start 2P'";
+    ctx.fillText('YOU SURVIVED!', W/2, H/2-110);
+    ctx.shadowBlur=0;
 
+    // stars row
+    ctx.fillStyle='#ffe000';
+    ctx.shadowColor='#ffe000'; ctx.shadowBlur=12;
+    ctx.font="22px 'Press Start 2P'";
+    ctx.fillText('★ ★ ★', W/2, H/2-66);
+    ctx.shadowBlur=0;
+
+    ctx.fillStyle='#ffffff';
+    ctx.font="13px 'Press Start 2P'";
+    ctx.fillText('FINAL SCORE', W/2, H/2-28);
+
+    ctx.fillStyle='#00ff88';
+    ctx.shadowColor='#00ff88'; ctx.shadowBlur=20;
+    ctx.font = "52px 'Press Start 2P'";
+    ctx.fillText(score, W/2, H/2+40);
+    ctx.shadowBlur=0;
+
+  } else {
+    // ── GAME OVER ──
+    ctx.fillStyle='#ff4444';
+    ctx.shadowColor='#ff4444'; ctx.shadowBlur=24*pulse;
+    ctx.font = "36px 'Press Start 2P'";
+    ctx.fillText('GAME OVER', W/2, H/2-110);
+    ctx.shadowBlur=0;
+
+    ctx.fillStyle='#ffffff';
+    ctx.font="14px 'Press Start 2P'";
+    ctx.fillText('FINAL SCORE', W/2, H/2-50);
+
+    ctx.fillStyle=PAL.neon2;
+    ctx.shadowColor=PAL.neon2; ctx.shadowBlur=20;
+    ctx.font = "52px 'Press Start 2P'";
+    ctx.fillText(score, W/2, H/2+28);
+    ctx.shadowBlur=0;
+  }
+
+  // shared: new best / best
+  const badgeY = survived ? H/2+88 : H/2+72;
   if (score >= bestScore && score > 0) {
     ctx.fillStyle='#ffe000';
     ctx.shadowColor='#ffe000'; ctx.shadowBlur=16;
     ctx.font="12px 'Press Start 2P'";
-    ctx.fillText('★ NEW BEST! ★', W/2, H/2+64);
+    ctx.fillText('★ NEW BEST! ★', W/2, badgeY);
     ctx.shadowBlur=0;
   } else if (bestScore > 0) {
     ctx.fillStyle=PAL.hudDim;
     ctx.font="11px 'Press Start 2P'";
-    ctx.fillText('BEST: '+bestScore, W/2, H/2+64);
+    ctx.fillText('BEST: '+bestScore, W/2, badgeY);
   }
 
   const blink2 = Math.sin(glowPhase*3)>0;
   if (blink2) {
     ctx.fillStyle='#ffffff';
-    ctx.shadowColor=PAL.neon; ctx.shadowBlur=14;
-    ctx.font="14px 'Press Start 2P'";
-    ctx.fillText('SPACE / ENTER to PLAY AGAIN', W/2, H/2+130);
+    ctx.shadowColor= survived ? '#00ff88' : PAL.neon;
+    ctx.shadowBlur=14;
+    ctx.font="13px 'Press Start 2P'";
+    ctx.fillText('SPACE / ENTER to PLAY AGAIN', W/2, H/2+148);
     ctx.shadowBlur=0;
   }
 }
@@ -720,6 +766,7 @@ function resetGame() {
   player.shield=0; player.slowTime=0; player.magnet=0; player.doubleScore=0;
   objects=[]; particles=[]; scorePopups=[];
   spawnTimer=0; hitStop=0; shakeTime=0; shakeAmt=0;
+  survived=false;
   STATE='play';
 }
 
@@ -881,6 +928,7 @@ function loop(ts) {
           shake(16, 0.5);
           hitStop = 0.07;
           if (score > bestScore) { bestScore=score; localStorage.setItem('gemDashBest', bestScore); }
+          survived = false;
           STATE='over';
           objects.splice(i,1);
         }
@@ -898,8 +946,9 @@ function loop(ts) {
 
   // time up
   if (timer <= 0) {
-    SFX.over();
+    SFX.victory();
     if (score > bestScore) { bestScore=score; localStorage.setItem('gemDashBest', bestScore); }
+    survived = true;
     STATE='over';
   }
 
