@@ -27,9 +27,9 @@ Or just open `index.html` locally — no server, no build step, no dependencies.
 |---|---|
 | ![Paused](screenshots/game-paused.png) | ![Game Over](screenshots/game-over.png) |
 
-| Paused |
+| You Survived! |
 |---|
-| ![Success](screenshots/game-success.png) |
+| ![You Survived!](screenshots/game-success.png) |
 
 ---
 
