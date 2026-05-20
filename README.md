@@ -17,6 +17,18 @@ Or just open `index.html` locally — no server, no build step, no dependencies.
 
 ---
 
+## 📸 Screenshots
+ 
+| Start Screen | Gameplay |
+|---|---|
+| ![Start Screen](screenshots/welcome-screen.png) | ![Gameplay](screenshots/game-play.png) |
+ 
+| Paused | Game Over |
+|---|---|
+| ![Paused](screenshots/game-paused.png) | ![Game Over](screenshots/game-over.png) |
+
+---
+
 ## 🕹️ How to Play
 
 | Action | Keys |
